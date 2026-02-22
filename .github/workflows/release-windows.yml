@@ -1,9 +1,11 @@
-
 on:
-  workflow_dispatch: {}   # manual run
   push:
     tags:
-      - "v*.*.*"          # runs when you push a version tag like v0.2.3
+      - "v*.*.*"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
 
 jobs:
   win:
@@ -20,13 +22,9 @@ jobs:
       - run: npm ci
       - run: npm run build:win
 
-      # Create GitHub Release and upload dist files
       - name: Publish to Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            dist/**/*.exe
-            dist/**/*.msi
-            dist/**/*.zip
+          files: dist/**/*.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
