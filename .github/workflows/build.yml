@@ -1,0 +1,46 @@
+name: Build installers
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+  # Optional: build on version tags like v2.2.0
+  # push:
+  #   tags:
+  #     - "v*.*.*"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install deps
+        run: npm ci
+
+      # If you rely on postinstall electron-rebuild, you can keep only npm ci.
+      # This step is optional, but helps with native modules like better-sqlite3.
+      - name: Rebuild native modules for Electron
+        run: npx electron-rebuild -f -w better-sqlite3
+        shell: bash
+
+      - name: Build installers (electron-builder)
+        run: npm run dist
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.os }}
+          path: dist/**

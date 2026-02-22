@@ -1,0 +1,340 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self';">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+               style-src 'self' 'unsafe-inline';
+               script-src 'self';
+               img-src 'self' data: file:;">
+  <title>ANEMRSystem</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">AN</div>
+      <div class="title">
+        <div class="name">ANEMRSystem</div>
+        <div class="subtitle">Desktop EMR (Login + Users)</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button id="btnExport" class="secondary">Backup (Export)</button>
+      <button id="btnImport" class="secondary">Restore (Import)</button>
+      <button id="btnLoginOpen" class="secondary">Login</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="userbox">
+        <div class="userline" id="whoami">Not logged in</div>
+        <button id="btnLogout" class="secondary small hidden">Logout</button>
+      </div>
+
+      <button class="navbtn active" data-view="patients">Patients</button>
+      <button class="navbtn" data-view="visits">Visits</button>
+      <button class="navbtn" data-view="booking">Booking</button>
+      <button class="navbtn" data-view="reports" id="navReports">Reports</button>
+      <button class="navbtn" data-view="users" id="navUsers">Users</button>
+
+      <div class="divider"></div>
+      <div class="hint">Tip: select a patient first.</div>
+    </nav>
+
+    <main class="content">
+      <div id="toast" class="toast hidden"></div>
+
+      <!-- Login -->
+      <section id="view-login" class="view hidden">
+        <div class="panel" style="max-width:520px;margin:60px auto;">
+          <div class="panel-title">Login</div>
+          <div class="muted">Username + PIN</div>
+
+          <div class="formgrid" style="margin-top:12px;">
+            <label>Username</label>
+            <input id="login_username" class="input" placeholder="e.g. admin / secretary" />
+
+            <label>PIN</label>
+            <input id="login_pin" class="input" placeholder="****" type="password" />
+          </div>
+
+          <div class="row" style="margin-top:12px;">
+            <button id="btnLogin" class="primary">Login</button>
+            <div class="grow"></div>
+            <div class="muted">Default: admin / 1234</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Patients -->
+      <section id="view-patients" class="view">
+        <div class="row">
+          <h2>Patients</h2>
+          <div class="grow"></div>
+          <input id="patientSearch" class="input" placeholder="Search name or phone..." />
+          <button id="btnPatientSearch">Search</button>
+          <button id="btnPatientNew" class="primary">+ New Patient</button>
+        </div>
+
+        <div class="grid2">
+          <div class="panel">
+            <div class="panel-title">Patient List</div>
+            <table class="table" id="patientsTable">
+              <thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Updated</th></tr></thead>
+              <tbody></tbody>
+            </table>
+            <div class="muted">Click a patient row to select.</div>
+          </div>
+
+          <div>
+            <div class="panel">
+              <div class="panel-title">Patient Form</div>
+              <div class="formgrid">
+                <label>Patient ID</label><input id="p_id" class="input" readonly placeholder="Auto" />
+                <label>Full Name *</label><input id="p_fullName" class="input" />
+                <label>Phone</label><input id="p_phone" class="input" />
+                <label>DOB</label><input id="p_dob" class="input" type="date" />
+                <label>Gender</label>
+                <select id="p_gender" class="input">
+                  <option value=""></option><option value="M">M</option><option value="F">F</option>
+                </select>
+                <label>National ID</label><input id="p_nid" class="input" />
+
+                <label>Primary Diagnosis</label><input id="p_diag" class="input" />
+                <label>Allergies</label><input id="p_allergies" class="input" />
+                <label>Chronic Conditions</label><input id="p_chronic" class="input" />
+                <label>Long-term Meds</label><input id="p_meds" class="input" />
+                <label>Medical Summary</label><textarea id="p_summary" class="input" rows="3"></textarea>
+
+                <label>Notes</label><textarea id="p_notes" class="input" rows="3"></textarea>
+              </div>
+
+              <div class="row">
+                <button id="btnPatientSave" class="primary">Save Patient</button>
+                <button id="btnPatientUpdate" class="secondary">Update Selected</button>
+                <button id="btnPatientDelete" class="secondary">Delete Patient</button>
+<button id="btnPatientPdf" class="secondary">Export Patient PDF</button>
+                <div class="grow"></div>
+                <div class="muted">* required</div>
+              </div>
+            </div>
+
+            <div class="panel" style="margin-top:12px;">
+              <div class="panel-title">Patient Summary</div>
+              <div id="patientSummary" class="muted">Select a patient to view summary.</div>
+            </div>
+          </div>
+          <div class="panel" style="margin-top:12px;">
+          <div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <h3>Files</h3>
+    <button id="btnUploadImages" class="secondary">Upload Images</button>
+  </div>
+
+  <div id="patientFilesGrid" class="filesGrid"></div>
+  <div class="muted">Click an image to open it.</div>
+</div>
+</div>
+        </div>
+      </section>
+
+      <!-- Visits -->
+      <section id="view-visits" class="view hidden">
+        <div class="row">
+          <h2>Visits</h2>
+          <div class="grow"></div>
+          <div class="pill" id="selectedPatientPill" class="pill pill-clickable">No patient selected</div>
+        </div>
+
+        <div class="grid2">
+          <div class="panel">
+            <div class="panel-title">Visit History (Selected Patient)</div>
+            <table class="table" id="visitsTable">
+              <thead><tr><th>Date</th><th>Reason</th><th>Diagnosis</th><th>Paid</th><th>Actions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">New Visit</div>
+            <div class="formgrid">
+              <label>Visit Date *</label><input id="v_date" class="input" type="datetime-local" />
+              <label>Reason</label><input id="v_reason" class="input" />
+              <label>Diagnosis</label><input id="v_diagnosis" class="input" />
+              <label>Treatment</label><input id="v_treatment" class="input" />
+              <label>Notes</label><textarea id="v_notes" class="input" rows="3"></textarea>
+              <label>Amount Paid</label><input id="v_paid" class="input" placeholder="0" />
+            </div>
+
+            <div class="row">
+              <button id="btnVisitSave" class="primary">Save Visit</button>
+              <div class="grow"></div>
+              <div class="muted">Requires selected patient</div>
+            </div>
+
+            <div class="muted" id="visitBookingHint"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Booking -->
+      <section id="view-booking" class="view hidden">
+        <div class="row">
+          <h2>Booking</h2>
+          <div class="grow"></div>
+          <input id="b_date" class="input" type="date" />
+          <button id="btnBookingLoad">Load Day</button>
+          <div class="pill" id="selectedPatientPill2" class="pill pill-clickable">No patient selected</div>
+        </div>
+
+        <div class="grid2">
+          <div class="panel">
+            <div class="panel-title">Bookings for Selected Day</div>
+            <table class="table" id="bookingTable">
+              <thead><tr><th>Time</th><th>Patient</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">New Booking</div>
+            <div class="formgrid">
+              <label>Time *</label>
+              <div class="slotRow">
+                <select id="b_time_select" class="input"></select>
+                <input id="b_time" class="input" placeholder="or type e.g. 09:15" />
+              </div>
+              <label>Notes</label><textarea id="b_notes" class="input" rows="3"></textarea>
+            </div>
+            <div class="row">
+              <button id="btnBookingSave" class="primary">Save Booking</button>
+              <div class="grow"></div>
+              <div class="muted">No duplicate slots (same date+time)</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Reports -->
+      <section id="view-reports" class="view hidden">
+        <div class="row">
+          <h2>Reports</h2>
+          <div class="grow"></div>
+
+          <input id="r_month" class="input" type="month" />
+          <button id="btnThisMonth" class="secondary">This Month</button>
+          <button id="btnLastMonth" class="secondary">Last Month</button>
+
+          <div style="width:12px;"></div>
+
+          <input id="r_from" class="input" type="date" />
+          <input id="r_to" class="input" type="date" />
+          <button id="btnReportRun" class="primary">Generate</button>
+          <button id="btnReportPdf" class="secondary">Export PDF</button>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Summary</div>
+          <div class="kpis">
+            <div class="kpi"><div class="kpi-label">Unique Patients</div><div class="kpi-value" id="k_unique">0</div></div>
+            <div class="kpi"><div class="kpi-label">Visits</div><div class="kpi-value" id="k_visits">0</div></div>
+            <div class="kpi"><div class="kpi-label">Revenue</div><div class="kpi-value" id="k_rev">0</div></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">By Day</div>
+          <table class="table" id="reportTable">
+            <thead><tr><th>Day</th><th>Visits</th><th>Revenue</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Users -->
+      <section id="view-users" class="view hidden">
+        <div class="row">
+          <h2>Users</h2>
+          <div class="grow"></div>
+          <div class="pill" id="usersHint">Doctor only</div>
+        </div>
+
+        <div class="grid2">
+          <div class="panel">
+            <div class="panel-title">Users List</div>
+            <table class="table" id="usersTable">
+              <thead><tr><th>Username</th><th>Full Name</th><th>Role</th><th>Created</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">Create User</div>
+            <div class="formgrid">
+              <label>Full Name</label><input id="u_fullName" class="input" />
+              <label>Username</label><input id="u_username" class="input" />
+              <label>PIN</label><input id="u_pin" class="input" type="password" />
+              <label>Role</label>
+              <select id="u_role" class="input">
+                <option value="SECRETARY">Secretary</option>
+                <option value="DOCTOR">Doctor</option>
+              </select>
+            </div>
+
+            <div class="row">
+              <button id="btnCreateUser" class="primary">Create User</button>
+              <div class="grow"></div>
+              <div class="muted">Doctor can create accounts.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+<div id="imgModal" class="modalOverlay hidden">
+  <div class="modalBox">
+    <div class="modalHeader">
+      <div id="imgModalTitle">Image</div>
+      <button id="imgModalClose" class="modalClose">Close</button>
+    </div>
+    <div class="modalBody">
+      <img id="imgModalImg" src="" alt="preview"/>
+    </div>
+  </div>
+</div>
+<div id="patientPickerModal" class="modalOverlay hidden">
+  <div class="modalBox">
+    <div class="modalHeader">
+      <div><b>Select Patient</b></div>
+      <button id="patientPickerClose" class="modalClose">Close</button>
+    </div>
+
+    <div class="modalBody" style="align-items:stretch;justify-content:flex-start;">
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;">
+    <input id="patientPickerQuery" class="input" placeholder="Search name / phone..." />
+    <button id="patientPickerSearch" class="secondary">Search</button>
+  </div>
+
+  <div style="flex:1;overflow:auto;border:1px solid var(--line);border-radius:12px;">
+    <table class="table" style="margin:0;">
+      <thead>
+        <tr><th style="width:160px;">ID</th><th>Name</th><th style="width:180px;">Phone</th></tr>
+      </thead>
+      <tbody id="patientPickerTbody"></tbody>
+    </table>
+  </div>
+
+  <div class="muted" style="margin-top:10px;">
+    Tip: click a row to select the patient.
+  </div>
+</div>
+  </div>
+</div>
+  <script src="./renderer.js"></script>
+</body>
+</html>
